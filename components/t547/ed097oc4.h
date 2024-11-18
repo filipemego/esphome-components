@@ -1,7 +1,23 @@
-#pragma once
+#ifndef _ED047TC1_H_
+#define _ED047TC1_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/******************************************************************************/
+/***        include files                                                   ***/
+/******************************************************************************/
 
 #include <driver/gpio.h>
 
+#include <stdint.h>
+
+/******************************************************************************/
+/***        macro definitions                                               ***/
+/******************************************************************************/
+
+#if CONFIG_IDF_TARGET_ESP32
 
 /* Config Reggister Control */
 #define CFG_DATA GPIO_NUM_23
@@ -25,47 +41,101 @@
 #define D1 GPIO_NUM_32
 #define D0 GPIO_NUM_33
 
+#elif CONFIG_IDF_TARGET_ESP32S3
+
+/* Config Reggister Control */
+#define CFG_DATA GPIO_NUM_13
+#define CFG_CLK GPIO_NUM_12
+#define CFG_STR GPIO_NUM_0
+
+/* Control Lines */
+#define CKV GPIO_NUM_38
+#define STH GPIO_NUM_40
+
+/* Edges */
+#define CKH GPIO_NUM_41
+
+/* Data Lines */
+#define D7 GPIO_NUM_7
+#define D6 GPIO_NUM_6
+#define D5 GPIO_NUM_5
+#define D4 GPIO_NUM_4
+#define D3 GPIO_NUM_3
+#define D2 GPIO_NUM_2
+#define D1 GPIO_NUM_1
+#define D0 GPIO_NUM_8
+
+#else
+    #error "Unknown SOC"
+#endif
+
+/******************************************************************************/
+/***        type definitions                                                ***/
+/******************************************************************************/
+
+/******************************************************************************/
+/***        exported variables                                              ***/
+/******************************************************************************/
+
+/******************************************************************************/
+/***        exported functions                                              ***/
+/******************************************************************************/
+
 void epd_base_init(uint32_t epd_row_width);
-//void epd_poweron();
-//void epd_poweroff();
+void epd_poweron();
+void epd_poweroff();
 
 /**
- * Start a draw cycle.
+ * @brief Start a draw cycle.
  */
 void epd_start_frame();
 
 /**
- * End a draw cycle.
+ * @brief End a draw cycle.
  */
 void epd_end_frame();
 
 /**
- * Waits until all previously submitted data has been written.
- * Then, the following operations are initiated:
+ * @brief output row data
  *
- *  - Previously submitted data is latched to the output register.
- *  - The RMT peripheral is set up to pulse the vertical (gate) driver for
- *  `output_time_dus` / 10 microseconds.
- *  - The I2S peripheral starts transmission of the current buffer to
- *  the source driver.
- *  - The line buffers are switched.
+ * @note Waits until all previously submitted data has been written.
+ *       Then, the following operations are initiated:
  *
- * This sequence of operations allows for pipelining data preparation and
- * transfer, reducing total refresh times.
+ *           1. Previously submitted data is latched to the output register.
+ *           2. The RMT peripheral is set up to pulse the vertical (gate) driver
+ *              for `output_time_dus` / 10 microseconds.
+ *           3. The I2S peripheral starts transmission of the current buffer to
+ *              the source driver.
+ *           4. The line buffers are switched.
+ *
+ *       This sequence of operations allows for pipelining data preparation and
+ *       transfer, reducing total refresh times.
  */
-void IRAM_ATTR epd_output_row(uint32_t output_time_dus);
-
-/** Skip a row without writing to it. */
-void IRAM_ATTR epd_skip();
+void  epd_output_row(uint32_t output_time_dus);
 
 /**
- * Get the currently writable line buffer.
+ * @brief Skip a row without writing to it.
  */
-uint8_t IRAM_ATTR *epd_get_current_buffer();
+void  epd_skip();
 
 /**
- * Switches front and back line buffer.
- * If the switched-to line buffer is currently in use,
- * this function blocks until transmission is done.
+ * @brief Get the currently writable line buffer.
  */
-void IRAM_ATTR epd_switch_buffer();
+uint8_t *  epd_get_current_buffer();
+
+/**
+ * @brief Switches front and back line buffer.
+ *
+ * @note If the switched-to line buffer is currently in use, this function
+ *       blocks until transmission is done.
+ */
+void  epd_switch_buffer();
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+/******************************************************************************/
+/***        END OF FILE                                                     ***/
+/******************************************************************************/
